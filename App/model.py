@@ -38,14 +38,28 @@ los mismos.
 # Construccion de modelos
 def newCatalog():
 
-    catalog = {}
+    catalog = {"artists": None,
+               "artworks": None}
+    catalog["artists"] = lt.newlist()
+    catalog["artworks"] = lt.newList()
+
+    return catalog
 
 # Funciones para agregar informacion al catalogo
+def addArtist(catalog, artist):
+    lt.addLast(catalog["artists"], artist)
+
+def addArtwork(catalog, artwork):
+    lt.addLast(catalog["artworks"], artwork)
 
 # Funciones para creacion de datos
 
+
 # Funciones de consulta
+
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 
+
 # Funciones de ordenamiento
+
