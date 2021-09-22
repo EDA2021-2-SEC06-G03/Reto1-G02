@@ -110,13 +110,6 @@ def cmpArtistByBornDate(artist1, artist2):
         r = False
     return r
 
-def cmpArtistByNationality(Artist1, Artist2):
-    if Artist1["Nationality"] < Artist2["Nationality"]:
-        r = True
-    else:
-        r = False
-    return r
-
 
 # Ordenar y clasificar artistas
 def cronologicoArtistas(fecha_inicial, fecha_final, catalog):
@@ -132,26 +125,77 @@ def cronologicoArtistas(fecha_inicial, fecha_final, catalog):
 def cronologicoObras(fecha_inicial, fecha_final, catalog):
     lista_ordenada = ins.sort(catalog['artworks'], cmpArtworkByDateAcquired)['elements']
     lista_final = lt.newList()
+    lista_artistas = lt.newList()
     cont = 0
     for artwork in lista_ordenada:
         if fecha_final >= artwork['DateAcquired'] >= fecha_inicial:
+            nombresArtistas = ""
             lt.addLast(lista_final, artwork)
+            limpio = artwork['ConstituentID'].replace(" ", "").replace("[", "").replace("]", "")
+            for artistId in limpio.split(','):
+                for artist in catalog['artist']['elements']:
+                    if artist['ConstituentID'] == artistId:
+                        nombresArtistas += artist['DisplayName'] + ", "
+                        break
+            lt.addLast(lista_artistas, nombresArtistas)
             if 'Purchase' in artwork['CreditLine'] or 'purchase' in artwork['CreditLine']:
                 cont += 1
 
-    return lista_final, cont
-    
-def listarObrasPorNacionalidad(catalog):
-    lista_ordenada = ins.sort(catalog['artworks'], cmpArtistByNationality)['elements']
-    lista_final = lt.newList()
-    cont = 0
-    for artwork in lista_ordenada:  
-      if artwork['Nationality'] :
-            lt.addLast(lista_final, artwork)
-            cont += 1
+    return lista_final, cont, lista_artistas
 
-    return lista_final, cont
 
+# Funciones de artistas y obras
+def obtenerIdArtista(nombreArtista, catalog):
+    for artist in catalog['artist']['elements']:
+        if nombreArtista in artist['DisplayName']:
+            return artist['ConstituentID']
+
+
+def tecnicaMayorCantidad(listaTecnicas, listaObras):
+    tecnicaMayor = ""
+    contMayor = 0
+    listaObrasMayor = lt.newList()
+
+    # Buscando la tecnica que mas se usó
+    for i in range(1, lt.size(listaTecnicas) + 1):
+        cont = 0
+        for j in range(1, lt.size(listaObras) + 1):
+            if lt.getElement(listaTecnicas, i) == lt.getElement(listaObras, j)['Medium']:
+                cont += 1
+        if cont > contMayor:
+            contMayor = cont
+            tecnicaMayor = lt.getElement(listaTecnicas, i)
+
+    # Haciendo la lista de las obras con la tecnica mas usada
+    for j in range(1, lt.size(listaObras) + 1):
+        if lt.getElement(listaObras, j)['Medium'] == tecnicaMayor:
+            lt.addLast(listaObrasMayor, lt.getElement(listaObras, j))
+
+    return tecnicaMayor, contMayor, listaObrasMayor
+
+
+def totalObras(nombreArtista, catalog):
+    idArtista = obtenerIdArtista(nombreArtista, catalog)
+    listaTecnicas = lt.newList()
+    listaObras = lt.newList()
+
+    for artwork in catalog['artworks']['elements']:
+        limpio = artwork['ConstituentID'].replace(" ", "").replace("[", "").replace("]", "")
+        for artistId in limpio.split(','):
+            if artistId == idArtista:
+                tecnicaIncluida = False
+                for i in range(1, lt.size(listaTecnicas) + 1):
+                    if artwork['Medium'] == lt.getElement(listaTecnicas, i):
+                        tecnicaIncluida = True
+                        break
+                if not tecnicaIncluida:
+                    lt.addLast(listaTecnicas, artwork['Medium'])
+                lt.addLast(listaObras, artwork)
+
+    # Retorno la cantidad de obras del artista, la cantidad de tenicas diferentes que uso, el id del artista
+    # El nombre de la tecnica mas usada, la cantidad de veces que esta se uso y la lista de obras donde se aplico
+    tecnicaMayor, contMayor, listaObrasMayor = tecnicaMayorCantidad(listaTecnicas, listaObras)
+    return lt.size(listaObras), lt.size(listaTecnicas), idArtista, tecnicaMayor, contMayor, listaObrasMayor
 
 # Funciones de ordenamiento
 
@@ -182,4 +226,3 @@ def AlgoritmoIterativo(Tipo_Algoritmo, catalog):
         elapsed_time_mseg = (stop_time - start_time) * 1000
 
     return elapsed_time_mseg
-

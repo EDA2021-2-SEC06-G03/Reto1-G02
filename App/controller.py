@@ -73,13 +73,12 @@ def subList(lst, pos, numelem):
         error.reraise(exp, 'List->subList: ')
 
 
+def totalObras(nombreArtista, catalog):
+    return model.totalObras(nombreArtista, catalog)
+
 # Funciones listar cronologicamente
 def listarCronoArtistas(fecha_inicial, fecha_final, catalog):
     return model.cronologicoArtistas(fecha_inicial, fecha_final, catalog)
 
-
 def listarCronoObras(fecha_inicial, fecha_final, catalog):
     return model.cronologicoObras(fecha_inicial, fecha_final, catalog)
-
-def listarObrasPorNacionalidad(catalog):
-    return model.listarObrasPorNacionalidad(catalog)
