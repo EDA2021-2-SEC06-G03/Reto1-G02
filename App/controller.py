@@ -80,3 +80,6 @@ def listarCronoArtistas(fecha_inicial, fecha_final, catalog):
 
 def listarCronoObras(fecha_inicial, fecha_final, catalog):
     return model.cronologicoObras(fecha_inicial, fecha_final, catalog)
+
+def listarObrasPorNacionalidad(catalog):
+    return model.listarObrasPorNacionalidad(catalog)

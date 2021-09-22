@@ -91,6 +91,16 @@ def resp_req2():
     print("Las primeras 3 y los ultimas 3 obras en este rango son: ")
     primerosYUltimos(lista_obras, tam_lista)
 
+def resp_req4():
+    lista_obras, cont = controller.listarObrasPorNacionalidad(catalog)
+    tam_lista = lt.size(lista_obras)
+    print("Lista de obras por nacionalidad de su creador : ")
+    print("============ Respuesta Requerimiento 4 ============")
+    print("Obras clasificadas por nacionalidad " + str(tam_lista))
+    print("La cantidad de obras clasificadas es de " + str(cont))
+    print("Las primeras 3 y los ultimas 3 obras en este rango son: ")
+    primerosYUltimos(lista_obras, tam_lista)
+
 """
 Menu principal
 """
@@ -115,7 +125,10 @@ while True:
         resp_req1()
 
     elif int(inputs) == 4:
-        resp_req2()
+        resp_req4()
+        tipo_Algoritmo = "shell"
+        ordenado = controller.AlgoritmoIterativo(tipo_Algoritmo, catalog)
+ 
 
     elif int(inputs) == 5:
         Name = input("Ingresa el nombre del artista: ")

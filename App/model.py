@@ -110,6 +110,13 @@ def cmpArtistByBornDate(artist1, artist2):
         r = False
     return r
 
+def cmpArtistByNationality(Artist1, Artist2):
+    if Artist1["Nationality"] < Artist2["Nationality"]:
+        r = True
+    else:
+        r = False
+    return r
+
 
 # Ordenar y clasificar artistas
 def cronologicoArtistas(fecha_inicial, fecha_final, catalog):
@@ -131,6 +138,17 @@ def cronologicoObras(fecha_inicial, fecha_final, catalog):
             lt.addLast(lista_final, artwork)
             if 'Purchase' in artwork['CreditLine'] or 'purchase' in artwork['CreditLine']:
                 cont += 1
+
+    return lista_final, cont
+    
+def listarObrasPorNacionalidad(catalog):
+    lista_ordenada = ins.sort(catalog['artworks'], cmpArtistByNationality)['elements']
+    lista_final = lt.newList()
+    cont = 0
+    for artwork in lista_ordenada:  
+      if artwork['Nationality'] :
+            lt.addLast(lista_final, artwork)
+            cont += 1
 
     return lista_final, cont
 
