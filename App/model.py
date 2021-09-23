@@ -23,7 +23,7 @@
  *
  * Dario Correal - Version inicial
  """
-from typing import BinaryIO
+import cmath
 import config as cf
 import time
 from DISClib.ADT import list as lt
@@ -31,7 +31,6 @@ from DISClib.Algorithms.Sorting import shellsort as sa
 from DISClib.Algorithms.Sorting import insertionsort as ins
 from DISClib.Algorithms.Sorting import quicksort as qcks
 from DISClib.Algorithms.Sorting import mergesort as mrgs
-
 
 assert cf
 
@@ -103,6 +102,22 @@ def cmpArtworkByDateAcquired(artwork1, artwork2):
     return r
 
 
+def cmpArtworkByDate(artwork1, artwork2):
+    if artwork1["Date"] < artwork2["Date"]:
+        r = True
+    else:
+        r = False
+    return r
+
+
+def cmpArtworkByTransport(artwork1, artwork2):
+    if artwork1["Transport"] < artwork2["Transport"]:
+        r = True
+    else:
+        r = False
+    return r
+
+
 def cmpArtistByBornDate(artist1, artist2):
     if artist1["BeginDate"] < artist2["BeginDate"]:
         r = True
@@ -125,23 +140,21 @@ def cronologicoArtistas(fecha_inicial, fecha_final, catalog):
 def cronologicoObras(fecha_inicial, fecha_final, catalog):
     lista_ordenada = ins.sort(catalog['artworks'], cmpArtworkByDateAcquired)['elements']
     lista_final = lt.newList()
-    lista_artistas = lt.newList()
     cont = 0
     for artwork in lista_ordenada:
         if fecha_final >= artwork['DateAcquired'] >= fecha_inicial:
-            nombresArtistas = ""
-            lt.addLast(lista_final, artwork)
+            artwork['Artist'] = ""
             limpio = artwork['ConstituentID'].replace(" ", "").replace("[", "").replace("]", "")
             for artistId in limpio.split(','):
                 for artist in catalog['artist']['elements']:
                     if artist['ConstituentID'] == artistId:
-                        nombresArtistas += artist['DisplayName'] + ", "
+                        artwork['Artist'] += artist['DisplayName'] + "\n"
                         break
-            lt.addLast(lista_artistas, nombresArtistas)
+            lt.addLast(lista_final, artwork)
             if 'Purchase' in artwork['CreditLine'] or 'purchase' in artwork['CreditLine']:
                 cont += 1
 
-    return lista_final, cont, lista_artistas
+    return lista_final, cont
 
 
 # Funciones de artistas y obras
@@ -149,6 +162,16 @@ def obtenerIdArtista(nombreArtista, catalog):
     for artist in catalog['artist']['elements']:
         if nombreArtista in artist['DisplayName']:
             return artist['ConstituentID']
+
+
+def obtenerNombresArtistas(artwork, catalog):
+    limpio = artwork['ConstituentID'].replace(" ", "").replace("[", "").replace("]", "")
+    nombresArtistas = ""
+    for artistId in limpio.split(','):
+        for artist in catalog['artist']['elements']:
+            if artistId == artist['ConstituentID']:
+                nombresArtistas += artist['DisplayName'] + "\n"
+    return nombresArtistas
 
 
 def tecnicaMayorCantidad(listaTecnicas, listaObras):
@@ -174,6 +197,83 @@ def tecnicaMayorCantidad(listaTecnicas, listaObras):
     return tecnicaMayor, contMayor, listaObrasMayor
 
 
+def obtenerValorObra(artwork):
+    peso = 0
+    m2 = 0
+    m3 = 0
+
+    if artwork['Weight'] != "" and artwork['Weight'] != "0":
+        peso = float(artwork['Weight'])
+
+    if artwork['Diameter'] != "" and artwork['Diameter'] != "0":
+        diametro = float(artwork['Diameter']) / 100
+        area = (3.1416 * (diametro / 2) ** 2)
+        if artwork['Height'] != "" and artwork['Height'] != "0":
+            m3 = (area * (float(artwork['Height']) / 100))
+        else:
+            m2 = area
+
+    if artwork['Width'] != "" and artwork['Width'] != "0":
+        width = float(artwork['Width']) / 100
+        if artwork['Length'] != "" and artwork['Length'] != "0":
+            area = width * (float(artwork['Length']) / 100)
+            if artwork['Depth'] != "" and artwork['Depth'] != "0":
+                m3 = area * (float(artwork['Depth']) / 100)
+            else:
+                m2 = area
+        elif artwork['Height'] != "" and artwork['Height'] != "0":
+            height = float(artwork['Height']) / 100
+            area = width * height
+            if artwork['Depth'] != "" and artwork['Depth'] != "0":
+                m3 = width * height * (float(artwork['Depth']) / 100)
+            else:
+                m2 = area
+    if peso == 0 and m2 == 0 and m3 == 0:
+        valor = 48.00
+    elif peso > m2 and peso > m3:
+        valor = peso * 72.00
+    elif m3 > m2 and m3 > peso:
+        valor = m3 * 72.00
+    else:
+        valor = m2 * 72.00
+    return valor
+
+
+def totalTransporte(lista):
+    total = 0
+    for i in range(1, lt.size(lista) + 1):
+        obra = lt.getElement(lista, i)
+        if obra['Transport'] != "" and obra['Transport'] != "0":
+            total += round(float(obra['Transport']), 3)
+    return total
+
+
+def obrasDepartamento(nombreDepartamento, catalog):
+    cont = 0
+    peso = 0.000
+    listaObrasDepartamento = lt.newList()
+
+    for artwork in catalog['artworks']['elements']:
+        if nombreDepartamento == artwork['Department']:
+            if artwork['Weight'] != "":
+                peso += float(artwork['Weight'])
+            artwork['Transport'] = round(obtenerValorObra(artwork), 3)
+            artwork['Artist'] = obtenerNombresArtistas(artwork, catalog)
+            lt.addLast(listaObrasDepartamento, artwork)
+            cont += 1
+    listaObrasOrdenada = eliminarCampoVacio(ins.sort(listaObrasDepartamento, cmpArtworkByDate), "Date")
+    listaTransporteOrdenada = ins.sort(listaObrasDepartamento, cmpArtworkByTransport)
+    return cont, listaObrasOrdenada, peso, listaTransporteOrdenada, round(totalTransporte(listaObrasDepartamento), 3)
+
+
+def eliminarCampoVacio(lista, nombreCampo):
+    listaFiltrada = lt.newList()
+    for i in range(1, lt.size(lista) + 1):
+        if lt.getElement(lista, i)[nombreCampo] != "":
+            lt.addLast(listaFiltrada, lt.getElement(lista, i))
+    return listaFiltrada
+
+
 def totalObras(nombreArtista, catalog):
     idArtista = obtenerIdArtista(nombreArtista, catalog)
     listaTecnicas = lt.newList()
@@ -196,6 +296,7 @@ def totalObras(nombreArtista, catalog):
     # El nombre de la tecnica mas usada, la cantidad de veces que esta se uso y la lista de obras donde se aplico
     tecnicaMayor, contMayor, listaObrasMayor = tecnicaMayorCantidad(listaTecnicas, listaObras)
     return lt.size(listaObras), lt.size(listaTecnicas), idArtista, tecnicaMayor, contMayor, listaObrasMayor
+
 
 # Funciones de ordenamiento
 

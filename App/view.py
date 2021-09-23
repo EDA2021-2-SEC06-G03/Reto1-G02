@@ -62,6 +62,15 @@ catalog = None
 
 def imprimirArtistasCrono(lista):
     listaImprimir = primerosYUltimos(lista)
+
+    #IMPRESION NORMAL
+    # print('Nombre ---', 'Año nacimiento ---', 'Año fallecimiento ----', 'Nacionalidad ----', 'Genero')
+    # for i in range(1, lt.size(listaImprimir) + 1):
+    #     print([lt.getElement(listaImprimir, i).get('DisplayName'), lt.getElement(listaImprimir, i).get('BeginDate'),
+    #                lt.getElement(listaImprimir, i).get('EndDate'), lt.getElement(listaImprimir, i).get('Nationality'),
+    #                lt.getElement(listaImprimir, i).get('Gender')])
+
+    #IMPRESION CON PRETTY TABLE
     x = PrettyTable()
     x.field_names = ['Nombre', 'Año nacimiento', 'Año fallecimiento', 'Nacionalidad', 'Genero']
     for i in range(1, lt.size(listaImprimir) + 1):
@@ -71,12 +80,12 @@ def imprimirArtistasCrono(lista):
     print(x)
 
 
-def imprimirObrasCrono(lista, listaNombresArtistas):
+def imprimirObrasCrono(lista):
     listaImprimir = primerosYUltimos(lista)
     x = PrettyTable()
     x.field_names = ['Titulo', 'Artista(s)', 'Fecha', 'Medio', 'Dimensiones']
     for i in range(1, lt.size(listaImprimir) + 1):
-        x.add_row([lt.getElement(listaImprimir, i).get('Title'), lt.getElement(listaNombresArtistas, i),
+        x.add_row([lt.getElement(listaImprimir, i).get('Title'), lt.getElement(listaImprimir, i).get('Artist'),
                    lt.getElement(listaImprimir, i).get('Date'), lt.getElement(listaImprimir, i).get('Medium'),
                    lt.getElement(listaImprimir, i).get('Dimensions')])
     print(x)
@@ -89,6 +98,38 @@ def imprimirObrasTecnica(lista):
         x.add_row([lt.getElement(lista, i).get('Title'), lt.getElement(lista, i).get('Date'),
                    lt.getElement(lista, i).get('Medium'), lt.getElement(lista, i).get('Dimensions')])
     print(x)
+
+
+def imprimirObrasTransportar(lista):
+    x = PrettyTable()
+    x.field_names = ['Titulo', 'Artista (s)', 'Clasificación', 'Fecha de la obra', 'Medio', 'Dimensiones', 'Transport']
+
+    for i in range(1, lt.size(lista) + 1):
+        x.add_row([lt.getElement(lista, i).get('Title'), lt.getElement(lista, i).get('Artist'),
+                   lt.getElement(lista, i).get('Classification'), lt.getElement(lista, i).get('Date'),
+                   lt.getElement(lista, i).get('Medium'), lt.getElement(lista, i).get('Dimensions'),
+                   lt.getElement(lista, i).get('Transport')])
+    print(x)
+
+
+def primeros5Lista(lista):
+    lista5primeros = lt.newList()
+    lt.addLast(lista5primeros, lt.getElement(lista, 1))
+    lt.addLast(lista5primeros, lt.getElement(lista, 2))
+    lt.addLast(lista5primeros, lt.getElement(lista, 3))
+    lt.addLast(lista5primeros, lt.getElement(lista, 4))
+    lt.addLast(lista5primeros, lt.getElement(lista, 5))
+    return lista5primeros
+
+
+def ultimos5Lista(lista):
+    lista5ultimos = lt.newList()
+    lt.addLast(lista5ultimos, lt.getElement(lista, lt.size(lista)))
+    lt.addLast(lista5ultimos, lt.getElement(lista, lt.size(lista) - 1))
+    lt.addLast(lista5ultimos, lt.getElement(lista, lt.size(lista) - 2))
+    lt.addLast(lista5ultimos, lt.getElement(lista, lt.size(lista) - 3))
+    lt.addLast(lista5ultimos, lt.getElement(lista, lt.size(lista) - 4))
+    return lista5ultimos
 
 
 def primerosYUltimos(lista):
@@ -117,13 +158,13 @@ def resp_req1():
 def resp_req2():
     fecha_inicial = input("Ingresa la fecha inicial (AAAA-MM-DD): ")
     fecha_final = input("Ingresa la fecha final (AAAA-MM-DD): ")
-    lista_obras, cont, lista_nombres_artistas = controller.listarCronoObras(fecha_inicial, fecha_final, catalog)
+    lista_obras, cont= controller.listarCronoObras(fecha_inicial, fecha_final, catalog)
     tam_lista = lt.size(lista_obras)
     print("============ Respuesta Requerimiento 2 ============")
     print("Obras adquiridas entre " + fecha_inicial + " y " + fecha_final + " es de " + str(tam_lista))
     print("La cantidad de obras adquiridas mediante compras es de " + str(cont))
     print("Las primeras 3 y los ultimas 3 obras en este rango son: ")
-    imprimirObrasCrono(lista_obras, lista_nombres_artistas)
+    imprimirObrasCrono(lista_obras)
 
 
 def resp_req3():
@@ -138,14 +179,32 @@ def resp_req3():
         cantidadTecnicaMayor))
     imprimirObrasTecnica(listaDeObrasMayor)
 
+
+def resp_req5():
+    departamento = input("Ingresa el departamento a consultar: ")
+    cantidadObras, listaOrdenada, peso, listaTransporteOrdenada, totalTransporte = controller.obrasDepartamento(departamento, catalog)
+    print("============ Respuesta Requerimiento 5 ============")
+    print("Cantidad de obras a transportar: " + str(cantidadObras))
+    print("Peso aproximado de las obras (kg): " + str(round(peso, 3)))
+    print("Valor aproximado del transportes (USD): " + str(round(totalTransporte, 3)))
+    print("----- Obras mas caras de transportar ------")
+    imprimirObrasTransportar(ultimos5Lista(listaTransporteOrdenada))
+    print("----- Obras mas antiguas ------")
+    imprimirObrasTransportar(primeros5Lista(listaOrdenada))
+
 """
 Menu principal
 """
 while True:
     printMenu()
-    inputs = input('Seleccione una opción para continuar\n')
+    inputs = input('Seleccione una opción para continuar: ')
     if int(inputs) == 1:
-        tipo_Arreglo = input("Elige la opción ARRAY_LIST ó SINGLE_LINKED: ")
+        tipo_Arreglo = ""
+        opcion = int(input("Elige la opción 1.ArrayList 2.SingleLinked : "))
+        if opcion == 1:
+            tipo_Arreglo = "ARRAY_LIST"
+        else:
+            tipo_Arreglo = "SINGLE_LINKED"
         print("Cargando información de los archivos ....")
         catalog = initCatalog(tipo_Arreglo)
         loadData(catalog)
@@ -171,8 +230,7 @@ while True:
         print("Obras por la nacionalidad de sus creadores: ")
 
     elif int(inputs) == 7:
-        DEP = input("Ingresa el departamento a consultar: ")
-        print("Costo de transporte: ")
+        resp_req5()
 
     elif int(inputs) == 8:
         A_IO = input("Ingresa el año inicial de las obras: ")
